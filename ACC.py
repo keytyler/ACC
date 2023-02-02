@@ -11,8 +11,9 @@ def main():
     apic_url = input("Enter APIC URL: ")
     username = input("Enter username: ")
     password = getpass.getpass("Enter password: ")
-    csv_name = input("Name of this file \n" 
-    "Please note- 'End the file with .csv': ")
+    csv_name = input("Name your csv file: ") + (".csv")
+
+    print(f"The name of your csv file is:  {csv_name}")
 
     def apic_login(apic: str, username: str, password: str) -> dict:
     
@@ -119,7 +120,9 @@ def main():
     #Prints Output in Column Header 
     csvdata = "Date,Release,EPGs,EPs,Tenants,VRFs,BDs,Leafs,Spines,Controllers\n" + date + "," + release + "," + epg + "," + dataentries + "," + tenant + "," + vrf + "," + bd + "," + leafs + "," + spines + "," + controllers 
 
-    print(f"{csvdata} \n")
+    #print(f"{csvdata} \n")
+    print("{0:20}{1:18}{2:17}{3:19}{4:12}{5:16}{6:15}{7:16}{8:17}{9:18}".format("Date","Release","EPGs","EPs","Tenants","VRFs","BDs","Leafs","Spines","Controllers"))
+    print("{0:20}{1:18}{2:17}{3:19}{4:12}{5:16}{6:15}{7:16}{8:17}{9:18}".format(date, release, epg, dataentries, tenant, vrf, bd, leafs, spines, controllers))
 
     #CSV File 
     csv_file = open(csv_name, "w",newline='\r\n')
@@ -138,7 +141,8 @@ def main():
         exit()
 
 #Code Executes  
-main()
+if __name__ == "__main__":
+    main()
 
 
 
