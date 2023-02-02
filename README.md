@@ -1,6 +1,6 @@
-# ACC (APIC Count Collector) 
+# ACC (ACI Count Collector) 
 
-## A fully functional python script that gathers count information in your ACI fabric using REST APIs 
+## A fully functional python script that gathers count information in your ACI fabric using REST APIs
 
 The following information this project with gather will be the following:
 * Current Date
