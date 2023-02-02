@@ -21,7 +21,7 @@ The following information this project with gather will be the following:
 4. Insert APIC username 
 5. Insert APIC password (password will be hidden within command line)
 6. Insert a name for csv (must end filename with .csv, example: Filename.csv)
-7. Script with gather information using REST APIs
+7. Script will gather information using REST APIs
 8. CSV file created in local directory 
 
 
