@@ -1,3 +1,10 @@
+#######################################################################
+# Copyright (c) 2018 Cisco Systems, Inc. - All Rights Reserved
+# Unauthorized copying of this file,
+# via any medium is strictly prohibited
+# Proprietary and confidential
+#######################################################################
+
 import requests
 import json 
 import datetime
@@ -120,7 +127,7 @@ def main():
     #Prints Output in Column Header 
     csvdata = "Date,Release,EPGs,EPs,Tenants,VRFs,BDs,Leafs,Spines,Controllers\n" + date + "," + release + "," + epg + "," + dataentries + "," + tenant + "," + vrf + "," + bd + "," + leafs + "," + spines + "," + controllers 
 
-    #print(f"{csvdata} \n")
+    #Prints CSV data 
     print("{0:20}{1:18}{2:17}{3:19}{4:12}{5:16}{6:15}{7:16}{8:17}{9:18}".format("Date","Release","EPGs","EPs","Tenants","VRFs","BDs","Leafs","Spines","Controllers"))
     print("{0:20}{1:18}{2:17}{3:19}{4:12}{5:16}{6:15}{7:16}{8:17}{9:18}".format(date, release, epg, dataentries, tenant, vrf, bd, leafs, spines, controllers))
 
