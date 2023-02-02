@@ -1,7 +1,7 @@
 # ACC (ACI Count Collector) 
 
 ## Author and Credits 
-Keyshawn Tyler (keytyler@cisco.com) and Dominick Garzaniti (dgarzani@cisco.com)
+Keyshawn Tyler (keytyler@cisco.com), Dominick Garzaniti (dgarzani@cisco.com)
 
 ## A fully functional python script that gathers count information in your ACI fabric using REST APIs
 
