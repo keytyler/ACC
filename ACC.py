@@ -10,6 +10,7 @@ import json
 import datetime
 import getpass
 import urllib3
+from openpyxl import Workbook, load_workbook
 
 requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS = 'ALL:@SECLEVEL=1'
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -18,9 +19,9 @@ def main():
     apic_url = input("Enter APIC URL: ")
     username = input("Enter username: ")
     password = getpass.getpass("Enter password: ")
-    csv_name = input("Name your csv file: ") + (".csv")
+    #csv_name = input("Name your csv file: ") + (".csv")
 
-    print(f"The name of your csv file is:  {csv_name}")
+    #print(f"The name of your csv file is: {csv_name}")
 
     def apic_login(apic: str, username: str, password: str) -> dict:
     
@@ -100,6 +101,23 @@ def main():
     response_json = json.loads(epg_count.text)
     epg = response_json["imdata"][0]["moCount"]["attributes"]["count"]
 
+    #Retreiving Application Profiles 
+    ap_count = apic_query(apic=apic_url, path='/api/node/class/fvAp.json?rsp-subtree-include=count', cookie=apic_cookie)
+
+    response_json = json.loads(ap_count.text)
+    ap = response_json["imdata"][0]["moCount"]["attributes"]["count"]
+
+    #Retreiving Contracts 
+    contrac_count = apic_query(apic=apic_url, path='/api/node/class/vzBrCP.json?rsp-subtree-include=count', cookie=apic_cookie)
+
+    response_json = json.loads(contrac_count.text)
+    contrac = response_json["imdata"][0]["moCount"]["attributes"]["count"]
+
+    #Retreiving L3Outs
+    l3out_count = apic_query(apic=apic_url, path='/api/node/class/l3extOut.json?rsp-subtree-include=count', cookie=apic_cookie)
+
+    response_json = json.loads(l3out_count.text)
+    l3out = response_json["imdata"][0]["moCount"]["attributes"]["count"]
 
     #Retreiving Proxy Data Entries Count
     ip_count = apic_query(apic=apic_url, path='/api/node/class/fvIp.json?rsp-subtree-include=count', cookie=apic_cookie)
@@ -125,16 +143,54 @@ def main():
 
 
     #Prints Output in Column Header 
-    csvdata = "Date,Release,EPGs,EPs,Tenants,VRFs,BDs,Leafs,Spines,Controllers\n" + date + "," + release + "," + epg + "," + dataentries + "," + tenant + "," + vrf + "," + bd + "," + leafs + "," + spines + "," + controllers 
+    csvdata = "Date,Release,EPGs,EPs,Tenants,VRFs,BDs,L3Outs,Contracts,Application Profiles,Leafs,Spines,Controllers\n" + date + "," + release + "," + epg + "," + dataentries + "," + tenant + "," + vrf + "," + bd + "," + l3out + "," + contrac + "," + ap + "," + leafs + "," + spines + "," + controllers 
 
-    #Prints CSV data 
-    print("{0:20}{1:18}{2:17}{3:19}{4:12}{5:16}{6:15}{7:16}{8:17}{9:18}".format("Date","Release","EPGs","EPs","Tenants","VRFs","BDs","Leafs","Spines","Controllers"))
-    print("{0:20}{1:18}{2:17}{3:19}{4:12}{5:16}{6:15}{7:16}{8:17}{9:18}".format(date, release, epg, dataentries, tenant, vrf, bd, leafs, spines, controllers))
+    #Prints Excel data 
+    print("{0:20}{1:18}{2:17}{3:19}{4:12}{5:16}{6:15}{7:16}{8:17}{9:18}{10:15}{11:16}{12:15}".format("Date","Release","EPGs","EPs","Tenants","VRFs","BDs","L3Outs","Contracts","AP","Leafs","Spines","Controllers"))
+    print("{0:20}{1:18}{2:17}{3:19}{4:12}{5:16}{6:15}{7:16}{8:17}{9:18}{10:16}{11:16}{12:15}".format(date, release, epg, dataentries, tenant, vrf, bd, l3out, contrac, ap, leafs, spines, controllers))
 
     #CSV File 
-    csv_file = open(csv_name, "w",newline='\r\n')
-    csv_file.writelines(csvdata)
-    csv_file.close()
+    #csv_file = open(csv_name, "w",newline='\r\n')
+    #csv_file.writelines(csvdata)
+    #csv_file.close()
+
+    #XLSX File 
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Test"
+    
+    ws['A1'].value = "Date"
+    ws['B1'].value = "Release"
+    ws['C1'].value = "EPGs"
+    ws['D1'].value = "EPs"
+    ws['E1'].value = "Tenants"
+    ws['F1'].value = "VRFs"
+    ws['G1'].value = "BDs"
+    ws['H1'].value = "L3Outs"
+    ws['I1'].value = "Contracts"
+    ws['J1'].value = "Application Profiles"
+    ws['K1'].value = "Leafs"
+    ws['L1'].value = "Spines"
+    ws['M1'].value = "Controllers"
+
+
+    ws['A2'].value = date
+    ws['B2'].value = release
+    ws['C2'].value = epg
+    ws['D2'].value = dataentries
+    ws['E2'].value = tenant
+    ws['F2'].value = vrf
+    ws['G2'].value = bd
+    ws['H2'].value = l3out
+    ws['I2'].value = contrac
+    ws['J2'].value = ap
+    ws['K2'].value = leafs
+    ws['L2'].value = spines
+    ws['M2'].value = controllers
+
+    excel_name = input("Name your excel file: ") + (".xlsx")
+    wb.save(excel_name)
+    #csv_name = input("Name your csv file: ") + (".csv")
 
     #Logging out of APIC 
     logout_response = apic_logout(apic=apic_url, cookie=apic_cookie)
