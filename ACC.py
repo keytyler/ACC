@@ -15,16 +15,8 @@ from openpyxl import Workbook, load_workbook
 requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS = 'ALL:@SECLEVEL=1'
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-def main():
-    apic_url = input("Enter APIC URL: ")
-    username = input("Enter username: ")
-    password = getpass.getpass("Enter password: ")
-    #csv_name = input("Name your csv file: ") + (".csv")
+def apic_login(apic: str, username: str, password: str) -> dict:
 
-    #print(f"The name of your csv file is: {csv_name}")
-
-    def apic_login(apic: str, username: str, password: str) -> dict:
-    
         apic_cookie = {}
         credentials = {'aaaUser': {'attributes': {'name': username, 'pwd': password }}}
         json_credentials = json.dumps(credentials)
@@ -37,18 +29,23 @@ def main():
         apic_cookie['APIC-Cookie'] = token
         return apic_cookie
 
-    def apic_query(apic: str, path: str, cookie: dict) -> dict:
-
+def apic_query(apic: str, path: str, cookie: dict) -> dict:
         base_url = 'https://' + apic + path
         get_response = requests.get(base_url, cookies=cookie, verify=False)
         return get_response
 
-    def apic_logout(apic: str, cookie:dict) -> dict:
+def apic_logout(apic: str, cookie:dict) -> dict:
 
         base_url = 'https://' + apic + '/api/aaaLogout.json'
         post_response = requests.post(base_url, cookies=cookie, verify=False)
         return post_response
 
+def main():
+    apic_url = input("Enter APIC URL: ")
+    username = input("Enter username: ")
+    password = getpass.getpass("Enter password: ")
+    #csv_name = input("Name your csv file: ") + (".csv")
+    #print(f"The name of your csv file is: {csv_name}")
 
     #Logging in & retrieving APIC token
     apic_cookie = apic_login(apic=apic_url, username=username, password=password)
