@@ -5,6 +5,8 @@
 # Proprietary and confidential
 #######################################################################
 
+from openpyxl import Workbook
+import csv
 import requests
 import json 
 import datetime
@@ -36,62 +38,11 @@ def apic_logout(apic: str, cookie:dict) -> dict:
     post_response = requests.post(base_url, cookies=cookie, verify=False)
     return post_response
 
-def create_excel(date, release, epg, dataentries, tenant, vrf, bd, l3out, contrac, ap, leafs, spines, controllers):
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Test"
-    ws['A1'].value = "Date"
-    ws['B1'].value = "Release"
-    ws['C1'].value = "EPGs"
-    ws['D1'].value = "EPs"
-    ws['E1'].value = "Tenants"
-    ws['F1'].value = "VRFs"
-    ws['G1'].value = "BDs"
-    ws['H1'].value = "L3Outs"
-    ws['I1'].value = "Contracts"
-    ws['J1'].value = "Application Profiles"
-    ws['K1'].value = "Leafs"
-    ws['L1'].value = "Spines"
-    ws['M1'].value = "Controllers"
-
-    ws['A2'].value = date
-    ws['B2'].value = release
-    ws['C2'].value = epg
-    ws['D2'].value = dataentries
-    ws['E2'].value = tenant
-    ws['F2'].value = vrf
-    ws['G2'].value = bd
-    ws['H2'].value = l3out
-    ws['I2'].value = contrac
-    ws['J2'].value = ap
-    ws['K2'].value = leafs
-    ws['L2'].value = spines
-    ws['M2'].value = controllers
-
-    excel_name = input("Name your excel file: ") + (".xlsx")
-    wb.save(excel_name)
-
-def load_apic_credentials_from_csv(csv_file):
-    apic_credentials = []
-    with open(csv_file, 'r') as file:
-        csv_reader = csv.DictReader(file)
-        for row in csv_reader:
-            apic_credentials.append(row)
-    return apic_credentials
-
-def main():
-    csv_file = input("Enter the path to the CSV file with APIC credentials: ")
-    apic_credentials = load_apic_credentials_from_csv(csv_file)
-    for cred in apic_credentials:
-        apic_url = cred["APIC_IP"]
-        username = cred["Username"]
-        password = cred["Password"]
-        fabric_name = cred["Fabric_Name"]
-
-    #Logging in & retrieving APIC token
+def process_credential(apic_url, username, password, fabric_name, wb):
+    # Logging in & retrieving APIC token
     apic_cookie = apic_login(apic=apic_url, username=username, password=password)
     print(f"Logging into APIC {fabric_name} \n")
-    print ("Gathering data... \n")
+    print("Gathering data... \n")
 
     #Retrieving Leaf Count 
     leafcount = apic_query(apic=apic_url, path='/api/node/class/topology/pod-1/topSystem.json?query-target-filter=eq(topSystem.role,\"leaf\")&rsp-subtree-include=health,count', cookie=apic_cookie)
@@ -162,30 +113,71 @@ def main():
     now = datetime.datetime.today() 
     date = now.strftime("%m/%d/%Y")
 
-    #Prints Output in Column Header 
-    csvdata = "Date,Release,EPGs,EPs,Tenants,VRFs,BDs,L3Outs,Contracts,Application Profiles,Leafs,Spines,Controllers\n" + date + "," + release + "," + epg + "," + dataentries + "," + tenant + "," + vrf + "," + bd + "," + l3out + "," + contrac + "," + ap + "," + leafs + "," + spines + "," + controllers 
+    # Create a new worksheet for each fabric name
+    ws = wb.create_sheet()
+    ws.title = fabric_name  # Set the worksheet title to the fabric name
 
-    #Prints Excel data 
-    print("{0:20}{1:18}{2:17}{3:19}{4:12}{5:16}{6:15}{7:16}{8:17}{9:18}{10:15}{11:16}{12:15}".format("Date","Release","EPGs","EPs","Tenants","VRFs","BDs","L3Outs","Contracts","AP","Leafs","Spines","Controllers"))
-    print("{0:20}{1:18}{2:17}{3:19}{4:12}{5:16}{6:15}{7:16}{8:17}{9:18}{10:16}{11:16}{12:15}".format(date, release, epg, dataentries, tenant, vrf, bd, l3out, contrac, ap, leafs, spines, controllers))
+    ws['A1'].value = "Date"
+    ws['B1'].value = "Release"
+    ws['C1'].value = "EPGs"
+    ws['D1'].value = "EPs"
+    ws['E1'].value = "Tenants"
+    ws['F1'].value = "VRFs"
+    ws['G1'].value = "BDs"
+    ws['H1'].value = "L3Outs"
+    ws['I1'].value = "Contracts"
+    ws['J1'].value = "Application Profiles"
+    ws['K1'].value = "Leafs"
+    ws['L1'].value = "Spines"
+    ws['M1'].value = "Controllers"
 
-    #Creates excel sheet 
-    create_excel(date, release, epg, dataentries, tenant, vrf, bd, l3out, contrac, ap, leafs, spines, controllers)
+    # Populate data in the worksheet
+    ws['A2'].value = date
+    ws['B2'].value = release
+    ws['C2'].value = epg
+    ws['D2'].value = dataentries
+    ws['E2'].value = tenant
+    ws['F2'].value = vrf
+    ws['G2'].value = bd
+    ws['H2'].value = l3out
+    ws['I2'].value = contrac
+    ws['J2'].value = ap
+    ws['K2'].value = leafs
+    ws['L2'].value = spines
+    ws['M2'].value = controllers
 
-    #Logging out of APIC 
+    # Logging out of APIC
     logout_response = apic_logout(apic=apic_url, cookie=apic_cookie)
     print("Logging out of APIC \n")
-    
-    #Option to restart code 
+
+def main():
+    csv_file = input("Enter the path to the CSV file with APIC credentials: ")
+
+    wb = Workbook()
+
+    with open(csv_file, 'r') as file:
+        csv_reader = csv.DictReader(file)
+        for row in csv_reader:
+            apic_url = row["APIC_IP"]
+            username = row["Username"]
+            password = row["Password"]
+            fabric_name = row["Fabric_Name"]
+
+            process_credential(apic_url, username, password, fabric_name, wb)
+
+    # Remove the default empty worksheet created by Workbook
+    default_sheet = wb.get_sheet_by_name('Sheet')
+    wb.remove(default_sheet)
+
+    excel_name = input("Name your Excel file: ") + ".xlsx"
+    wb.save(excel_name)
+
+    # Option to restart code
     restart = input("Do you wish to create another file? yes/no - \n ")
     if restart == "yes":
         main()
-    else: 
+    else:
         exit()
-        
-#Code Executes  
+
 if __name__ == "__main__":
     main()
-
-
-
