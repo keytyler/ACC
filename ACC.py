@@ -39,10 +39,20 @@ def apic_logout(apic: str, cookie:dict) -> dict:
     return post_response
 
 def process_credential(apic_url, username, password, fabric_name, wb):
-    # Logging in & retrieving APIC token
+    #Logging in & retrieving APIC token
     apic_cookie = apic_login(apic=apic_url, username=username, password=password)
     print(f"Logging into APIC {fabric_name} \n")
     print("Gathering data... \n")
+
+    # Check if the worksheet with the same name as the fabric exists
+    if fabric_name in wb.sheetnames:
+        #ws = wb[fabric_name] # Use the existing worksheet (save this. if code works delete line)
+        ws = wb.create_sheet(fabric_name)
+        #ws.create_sheet(title=fabric_name)
+    #else:
+        #Create a new worksheet for the fabric name
+        #ws = wb.create_sheet()
+        #ws.title = fabric_name  # Set the worksheet title to the fabric name
 
     #Retrieving Leaf Count 
     leafcount = apic_query(apic=apic_url, path='/api/node/class/topology/pod-1/topSystem.json?query-target-filter=eq(topSystem.role,\"leaf\")&rsp-subtree-include=health,count', cookie=apic_cookie)
@@ -117,6 +127,7 @@ def process_credential(apic_url, username, password, fabric_name, wb):
     ws = wb.create_sheet()
     ws.title = fabric_name  # Set the worksheet title to the fabric name
 
+    #Populate column headers in worksheet 
     ws['A1'].value = "Date"
     ws['B1'].value = "Release"
     ws['C1'].value = "EPGs"
@@ -131,7 +142,7 @@ def process_credential(apic_url, username, password, fabric_name, wb):
     ws['L1'].value = "Spines"
     ws['M1'].value = "Controllers"
 
-    # Populate data in the worksheet
+    #Populate API data in worksheet
     ws['A2'].value = date
     ws['B2'].value = release
     ws['C2'].value = epg
@@ -148,13 +159,34 @@ def process_credential(apic_url, username, password, fabric_name, wb):
 
     # Logging out of APIC
     logout_response = apic_logout(apic=apic_url, cookie=apic_cookie)
-    print("Logging out of APIC \n")
+    print(f"Logging out of APIC {fabric_name} \n")
 
 def main():
     csv_file = input("Enter the path to the CSV file with APIC credentials: ")
+    #Prompt user for existing Excel File
+    existing_excel = input("Do you have an existing Excel file? (yes/no): ")
+    #wb = Workbook() #Define workbook outside of conditional block
+    
+    if existing_excel.lower() =="yes":
+        excel_file = input("Enter the path to the existing Excel file: ")
+        wb = load_workbook(excel_file)
+    
+        # #Load the existing workbook 
+        # try:
+        #     wb = load_workbook(excel_file)
+        # except FileNotFoundError:
+        #     wb = Workbook()
+    else:
+        wb = Workbook()
+    
+    #Remove the default empty worksheet created by Workbook
+    try:
+        default_sheet = wb["Sheet"]
+        wb.remove(default_sheet)
+    except KeyError:
+        pass
 
-    wb = Workbook()
-
+    #Opening CSV Credentials File
     with open(csv_file, 'r') as file:
         csv_reader = csv.DictReader(file)
         for row in csv_reader:
@@ -162,19 +194,18 @@ def main():
             username = row["Username"]
             password = row["Password"]
             fabric_name = row["Fabric_Name"]
-
             process_credential(apic_url, username, password, fabric_name, wb)
 
-    # Remove the default empty worksheet created by Workbook
-    default_sheet = wb.get_sheet_by_name('Sheet')
-    wb.remove(default_sheet)
-
-    excel_name = input("Name your Excel file: ") + ".xlsx"
-    wb.save(excel_name)
+    #Save the workbook back to the Excel file
+    if existing_excel.lower() == "yes":
+        wb.save(excel_file)
+    else:
+        excel_name = input("Name your Excel file: ") + ".xlsx"
+        wb.save(excel_name)
 
     # Option to restart code
     restart = input("Do you wish to create another file? yes/no - \n ")
-    if restart == "yes":
+    if restart.lower() == "yes":
         main()
     else:
         exit()
