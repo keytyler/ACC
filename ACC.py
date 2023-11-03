@@ -17,6 +17,7 @@ import csv
 requests.packages.urllib3.util.ssl_.DEFAULT_CIPHERS = 'ALL:@SECLEVEL=1'
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
+#APIC Login Function 
 def apic_login(apic: str, username: str, password: str) -> dict:
     apic_cookie = {}
     credentials = {'aaaUser': {'attributes': {'name': username, 'pwd': password }}}
@@ -28,16 +29,19 @@ def apic_login(apic: str, username: str, password: str) -> dict:
     apic_cookie['APIC-Cookie'] = token
     return apic_cookie
 
+#APIC API Call Function 
 def apic_query(apic: str, path: str, cookie: dict) -> dict:
     base_url = 'https://' + apic + path
     get_response = requests.get(base_url, cookies=cookie, verify=False)
     return get_response
 
+#APIC Logout Function 
 def apic_logout(apic: str, cookie:dict) -> dict:
     base_url = 'https://' + apic + '/api/aaaLogout.json'
     post_response = requests.post(base_url, cookies=cookie, verify=False)
     return post_response
 
+#Gather Credentials from CSV & run API Calls
 def process_credential(apic_url, username, password, fabric_name, wb):
     #Logging in & retrieving APIC token
     apic_cookie = apic_login(apic=apic_url, username=username, password=password)
@@ -46,13 +50,7 @@ def process_credential(apic_url, username, password, fabric_name, wb):
 
     # Check if the worksheet with the same name as the fabric exists
     if fabric_name in wb.sheetnames:
-        #ws = wb[fabric_name] # Use the existing worksheet (save this. if code works delete line)
         ws = wb.create_sheet(fabric_name)
-        #ws.create_sheet(title=fabric_name)
-    #else:
-        #Create a new worksheet for the fabric name
-        #ws = wb.create_sheet()
-        #ws.title = fabric_name  # Set the worksheet title to the fabric name
 
     #Retrieving Leaf Count 
     leafcount = apic_query(apic=apic_url, path='/api/node/class/topology/pod-1/topSystem.json?query-target-filter=eq(topSystem.role,\"leaf\")&rsp-subtree-include=health,count', cookie=apic_cookie)
@@ -163,19 +161,13 @@ def process_credential(apic_url, username, password, fabric_name, wb):
 
 def main():
     csv_file = input("Enter the path to the CSV file with APIC credentials: ")
+
     #Prompt user for existing Excel File
     existing_excel = input("Do you have an existing Excel file? (yes/no): ")
-    #wb = Workbook() #Define workbook outside of conditional block
-    
+
     if existing_excel.lower() =="yes":
         excel_file = input("Enter the path to the existing Excel file: ")
         wb = load_workbook(excel_file)
-    
-        # #Load the existing workbook 
-        # try:
-        #     wb = load_workbook(excel_file)
-        # except FileNotFoundError:
-        #     wb = Workbook()
     else:
         wb = Workbook()
     
