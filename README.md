@@ -4,7 +4,6 @@
 Keyshawn Tyler (keytyler@cisco.com), Dominick Garzaniti (dgarzani@cisco.com)
 
 ## A fully functional python script that gathers count information in your ACI fabric using REST APIs
-
 The following information this project with gather will be the following:
 * Current Date
 * Release Version
@@ -20,15 +19,18 @@ The following information this project with gather will be the following:
 * Spines count
 * APIC Count
 
+## Requirements - Items the tool will need to function 
+1. A credentials file (csv file)
+
 ## (Instructions) How to use tool
 1. Clone project (git clone)
 2. Run python script using py -3 ACC.py or python3 ACC.py 
-3. Insert APIC IP Address 
-4. Insert APIC username 
-5. Insert APIC password (password will be hidden within command line)
-6. Insert a name for csv (must end filename with .csv, example: Filename.csv)
-7. Script will gather information using REST APIs
-8. CSV file created in local directory 
+3. Enter path to the csv file with APIC credentials
+4. User will be prompted if an existing file with APIC information already exist. If yes, user will need to provide the path to the excel file. If no, script will continue to run. 
+5. Tool will gather information from APIC with various APIC API calls. 
+6. User will need to give file a name. 
+7. File will be created in the directory the user is working in. 
+8. Tool will ask if user wants to create another file. If yes, the tool will reset this process. If no, the tool will end. 
 
 
 ## Find a bug? 
