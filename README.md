@@ -13,6 +13,9 @@ The following information this project with gather will be the following:
 * Tenant count
 * VRF count
 * BDs count
+* L3Outs
+* Contracts
+* Application Profile
 * Leafs count
 * Spines count
 * APIC Count

@@ -61,7 +61,8 @@ def apic_logout(apic_url: str, cookie: dict) -> None:
     requests.post(base_url, cookies=cookie, verify=False)
 
 # Process Credential Function
-def process_credential(apic_url, username, password, fabric_name, wb):
+def process_credential(apic_url, username, password, fabric_name, wb): #existing_excel is new
+    ws = None  # Initialize ws with None - THis is new
     try:
         # Logging in & retrieving APIC token
         apic_cookie = apic_login(apic_url, username, password)
@@ -82,7 +83,6 @@ def process_credential(apic_url, username, password, fabric_name, wb):
             "Spines": "/api/node/class/topology/pod-1/topSystem.json?query-target-filter=eq(topSystem.role,\"spine\")&rsp-subtree-include=health,count",
             "Controllers": "/api/node/class/topSystem.json?rsp-subtree-include=count&query-target-filter=eq(topSystem.role,\"controller\")"
         }
-
         counts_data = {key: apic_query(apic_url, path, apic_cookie)['imdata'][0]['moCount']['attributes']['count'] for key, path in counts.items()}
 
         # Retrieve Release Version
@@ -92,16 +92,17 @@ def process_credential(apic_url, username, password, fabric_name, wb):
         # Retrieve current date
         date = datetime.datetime.today().strftime("%m/%d/%Y")
 
-        # Create a new worksheet for each fabric name
-        ws = wb.create_sheet()
-        ws.title = fabric_name
+        ws = wb[fabric_name] if fabric_name in wb.sheetnames else None
 
-        # Populate column headers in worksheet
-        ws.append(["Date", "Release"] + list(counts_data.keys()))
+        if ws is None:
+            # Create a new worksheet for each fabric name
+            ws = wb.create_sheet()
+            ws.title = fabric_name
+            # Populate column headers in worksheet
+            ws.append(["Date", "Release"] + list(counts_data.keys()))
 
         # Populate API data in worksheet
         ws.append([date, release] + list(counts_data.values()))
-
         print(f"Data collected and saved to worksheet for APIC {fabric_name}.")
 
     except requests.exceptions.RequestException as e:
@@ -111,7 +112,7 @@ def process_credential(apic_url, username, password, fabric_name, wb):
         # Logging out of APIC if logged in
         if 'apic_cookie' in locals():
             apic_logout(apic_url, apic_cookie)
-            print(f"Logged out of APIC {fabric_name}.")
+            print(f"Logged out of APIC {fabric_name}..\n")
 
 def main():
     try:
@@ -148,7 +149,7 @@ def main():
             wb.save(excel_name)
 
         # Option to restart code
-        restart = input("Do you wish to create another file? (yes/no): ")
+        restart = input("Do you wish to create another file? (yes/no): \n")
         if restart.lower() == "yes":
             main()
 
